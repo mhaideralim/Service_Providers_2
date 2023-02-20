@@ -1,20 +1,18 @@
-import json
-
 from fastapi import HTTPException, APIRouter
-from app.model import ServiceModel
-from app.model.ServiceModel import service_data
 
+from app.model import service_model
+from app.security.dependencies import get_database
 
 service_router = APIRouter()
 
 
 # Get API to search data from database and to show it.
 @service_router.get("/get_services_data")
-async def get_provided_services(service_id: str):
+async def get_provided_services(service_id: str, db=None):
     try:
-        data = await service_data.find_one({"service_id": service_id})
+        data = await get_database(db).find_one({"service_id": service_id})
         if data:
-            return {"Data Found!"}
+            return HTTPException(status_code=200, detail="Data Found!")
         else:
             return HTTPException(status_code=404, detail="Id Does Not Exists!")
     except Exception as e:
@@ -23,16 +21,16 @@ async def get_provided_services(service_id: str):
 
 # POST API to store data in database
 @service_router.post("/set_services_data")
-async def set_services_data(services: ServiceModel.Service):
+async def set_services_data(services: service_model.Service, db=None):
     try:
-        data = await service_data.find_one(
+        data = await get_database(db).find_one(
             {"service_id": services.service_id})
         # Query to find existing data to avoid data duplication
         if data:
-            return {"ID Already Exists!"}
+            return HTTPException(status_code=500, detail="ID Already Exists!")
         else:
-            await service_data.insert_one(services.dict())
+            await get_database(db).insert_one(services.dict())
             # Query to insert data in the DataBase
-            return {"message": "Services Stored Successfully."}
+            return HTTPException(status_code=200, detail="DATA Saved Successfully")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

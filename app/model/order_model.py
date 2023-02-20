@@ -1,10 +1,7 @@
 from pydantic import BaseModel
-from app.databse.db_connection import client
-
-db = client["service_provider"]
-order_data = db["orders_data"]
 
 
+# Order DataBase Model
 class Order(BaseModel):
     order_id: int
     order_name: str | None = None
